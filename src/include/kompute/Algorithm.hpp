@@ -103,7 +103,7 @@ class Algorithm
             }
             uint32_t memorySize =
               sizeof(decltype(specializationConstants.back()));
-            uint32_t size = specializationConstants.size();
+            uint32_t size = static_cast<uint32_t>(specializationConstants.size());
             uint32_t totalSize = size * memorySize;
             this->mSpecializationConstantsData = malloc(totalSize);
             memcpy(this->mSpecializationConstantsData,
@@ -118,7 +118,7 @@ class Algorithm
                 free(this->mPushConstantsData);
             }
             uint32_t memorySize = sizeof(decltype(pushConstants.back()));
-            uint32_t size = pushConstants.size();
+            uint32_t size = static_cast<uint32_t>(pushConstants.size());
             uint32_t totalSize = size * memorySize;
             this->mPushConstantsData = malloc(totalSize);
             memcpy(this->mPushConstantsData, pushConstants.data(), totalSize);

@@ -68,6 +68,9 @@ if(NOT KOMPUTE_OPT_LOG_LEVEL_DISABLED)
     endif()
 endif()
 
+if(KOMPUTE_OPT_BUILD_PYTHON)
+    target_link_libraries(kp_logger PUBLIC pybind11::headers)
+endif()
 
 # Nothing will be installed, this will only export kp_logger to komputeTargets
 add_library(kompute::logger ALIAS kp_logger)

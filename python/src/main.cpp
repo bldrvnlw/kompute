@@ -11,8 +11,31 @@
 
 namespace py = pybind11;
 
+py::object get_kp_logger(const std::string& level) {
+    static py::object logger_map = py::none(); // This static will be initialized once inside the function
+    
+    // Initialize logger_map only once, when the function is first called
+    if (logger_map.is_none()) { // Check if it's not yet initialized (py::object default constructor makes it 'none')
+        py::dict temp_logger_map; // Use a temporary dict for safe initialization
+        py::object logging = py::module_::import("logging");
+        py::object kompute_logger = logging.attr("getLogger")("kompute");
+        
+        temp_logger_map["trace"] = kompute_logger.attr("debug"); // Assuming trace exists or use debug
+        temp_logger_map["debug"] = kompute_logger.attr("debug");
+        temp_logger_map["info"] = kompute_logger.attr("info");
+        temp_logger_map["warning"] = kompute_logger.attr("warning");
+        temp_logger_map["error"] = kompute_logger.attr("error");
+        
+        logger_map = temp_logger_map; // Assign the initialized temporary dict
+    }
+    
+    // Now safely retrieve the desired logger level
+    //return logger_map[py::cast(level)];
+    return logger_map[py::cast(level)].cast<py::object>();
+}
+
 // used in Core.hpp
-py::object kp_trace, kp_debug, kp_info, kp_warning, kp_error;
+//py::object kp_trace, kp_debug, kp_info, kp_warning, kp_error;
 
 std::unique_ptr<kp::OpAlgoDispatch>
 opAlgoDispatchPyInit(std::shared_ptr<kp::Algorithm>& algorithm,
@@ -45,9 +68,15 @@ opAlgoDispatchPyInit(std::shared_ptr<kp::Algorithm>& algorithm,
         return std::unique_ptr<kp::OpAlgoDispatch>{ new kp::OpAlgoDispatch(
           algorithm, dataVec) };
     } else {
-        throw std::runtime_error("Kompute Python no valid dtype supported");
+        throw std::runtime_error("Kompute Python no valid dtype supported");	
     }
 }
+
+/*PYBIND11_MODULE(kp, m) {
+  m.doc() = "pybind11 kp module";
+  // Absolutely nothing else. No defs, no classes, no function calls.
+  // DO NOT call get_kp_logger() here, just the m.doc() line.
+}*/
 
 PYBIND11_MODULE(kp, m)
 {
@@ -55,12 +84,16 @@ PYBIND11_MODULE(kp, m)
     // The logging modules are used in the Kompute.hpp file
     py::module_ logging = py::module_::import("logging");
     py::object kp_logger = logging.attr("getLogger")("kp");
-    kp_trace = kp_logger.attr(
-      "debug"); // Same as for debug since python has no trace logging level
-    kp_debug = kp_logger.attr("debug");
-    kp_info = kp_logger.attr("info");
-    kp_warning = kp_logger.attr("warning");
-    kp_error = kp_logger.attr("error");
+    m.attr("trace") = get_kp_logger("debug");
+    m.attr("debug") = get_kp_logger("debug");
+    m.attr("info") = get_kp_logger("info");
+    m.attr("warning") = get_kp_logger("warning");
+    m.attr("error") = get_kp_logger("error");
+    //kp_trace = kp_logger.attr("debug"); // Same as for debug since python has no trace logging level
+    //kp_debug = kp_logger.attr("debug");
+    //kp_info = kp_logger.attr("info");
+    //kp_warning = kp_logger.attr("warning");
+    //kp_error = kp_logger.attr("error");
     logging.attr("basicConfig")();
 
     py::module_ np = py::module_::import("numpy");
@@ -315,7 +348,7 @@ PYBIND11_MODULE(kp, m)
                          "float with data size {}",
                          flatdata.size());
             return self.tensor(info.ptr,
-                               flatdata.size(),
+                               static_cast<uint32_t>(flatdata.size()),
                                sizeof(float),
                                kp::Memory::DataTypes::eFloat,
                                memory_type);
@@ -337,31 +370,31 @@ PYBIND11_MODULE(kp, m)
                          std::string(py::str(flatdata.dtype())));
             if (flatdata.dtype().is(py::dtype::of<std::float_t>())) {
                 return self.tensor(info.ptr,
-                                   flatdata.size(),
+                                   static_cast<uint32_t>(flatdata.size()),
                                    sizeof(float),
                                    kp::Memory::DataTypes::eFloat,
                                    memory_type);
             } else if (flatdata.dtype().is(py::dtype::of<std::uint32_t>())) {
                 return self.tensor(info.ptr,
-                                   flatdata.size(),
+                                   static_cast<uint32_t>(flatdata.size())	,
                                    sizeof(uint32_t),
                                    kp::Memory::DataTypes::eUnsignedInt,
                                    memory_type);
             } else if (flatdata.dtype().is(py::dtype::of<std::int32_t>())) {
                 return self.tensor(info.ptr,
-                                   flatdata.size(),
+                                   static_cast<uint32_t>(flatdata.size()),
                                    sizeof(int32_t),
                                    kp::Memory::DataTypes::eInt,
                                    memory_type);
             } else if (flatdata.dtype().is(py::dtype::of<std::double_t>())) {
                 return self.tensor(info.ptr,
-                                   flatdata.size(),
+                                   static_cast<uint32_t>(flatdata.size()),
                                    sizeof(double),
                                    kp::Memory::DataTypes::eDouble,
                                    memory_type);
             } else if (flatdata.dtype().is(py::dtype::of<bool>())) {
                 return self.tensor(info.ptr,
-                                   flatdata.size(),
+                                   static_cast<uint32_t>(flatdata.size()),
                                    sizeof(bool),
                                    kp::Memory::DataTypes::eBool,
                                    memory_type);
@@ -710,7 +743,7 @@ PYBIND11_MODULE(kp, m)
             // If reach then no valid dtype supported
             throw std::runtime_error("Kompute Python no valid dtype supported");
         },
-        DOC(kp, Manager, algorithm),
+        DOC(kp, Manager, algorithm),	
         py::arg("tensors"),
         py::arg("spirv"),
         py::arg("workgroup") = kp::Workgroup(),
@@ -738,12 +771,13 @@ PYBIND11_MODULE(kp, m)
         "Return a dict containing information about the device");
 
     auto atexit = py::module_::import("atexit");
+    // these py::object lifecycles are handled by the kp module
     atexit.attr("register")(py::cpp_function([]() {
-        kp_trace = py::none();
-        kp_debug = py::none();
-        kp_info = py::none();
-        kp_warning = py::none();
-        kp_error = py::none();
+        //kp_trace = py::none();
+        //kp_debug = py::none();
+        //kp_info = py::none();
+        //kp_warning = py::none();
+        //kp_error = py::none();
     }));
 
 #ifdef VERSION_INFO
@@ -752,3 +786,4 @@ PYBIND11_MODULE(kp, m)
     m.attr("__version__") = "dev";
 #endif
 }
+

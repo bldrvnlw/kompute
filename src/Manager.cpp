@@ -342,7 +342,7 @@ Manager::createDevice(const std::vector<uint32_t>& familyQueueIndices,
     // Getting an integer that says how many vuklan devices we have
     std::vector<vk::PhysicalDevice> physicalDevices =
       this->mInstance->enumeratePhysicalDevices();
-    uint32_t deviceCount = physicalDevices.size();
+    uint32_t deviceCount = static_cast<std::uint32_t>(physicalDevices.size());
 
     // This means there are no devices at all
     if (deviceCount == 0) {
@@ -447,11 +447,11 @@ Manager::createDevice(const std::vector<uint32_t>& familyQueueIndices,
     }
 
     vk::DeviceCreateInfo deviceCreateInfo(vk::DeviceCreateFlags(),
-                                          deviceQueueCreateInfos.size(),
+                                          static_cast<std::uint32_t>(deviceQueueCreateInfos.size()),
                                           deviceQueueCreateInfos.data(),
                                           {},
                                           {},
-                                          validExtensions.size(),
+                                          static_cast<std::uint32_t>(validExtensions.size()),
                                           validExtensions.data());
 
     this->mDevice = std::make_shared<vk::Device>();

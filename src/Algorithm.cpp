@@ -172,7 +172,7 @@ Algorithm::createParameters()
     std::vector<vk::DescriptorSetLayoutBinding> descriptorSetBindings;
     for (size_t i = 0; i < this->mMemObjects.size(); i++) {
         descriptorSetBindings.push_back(
-          vk::DescriptorSetLayoutBinding(i, // Binding index
+          vk::DescriptorSetLayoutBinding(static_cast<std::uint32_t>(i), // Binding index
                                          mMemObjects[i]->getDescriptorType(),
                                          1, // Descriptor count
                                          vk::ShaderStageFlagBits::eCompute));
@@ -207,7 +207,7 @@ Algorithm::createParameters()
 
         vk::WriteDescriptorSet descriptorSet =
           this->mMemObjects[i]->constructDescriptorSet(*this->mDescriptorSet,
-                                                       i);
+                                                       static_cast<std::uint32_t>(i));
 
         computeWriteDescriptorSets.push_back(descriptorSet);
 

@@ -296,7 +296,7 @@ Sequence::record(std::shared_ptr<OpBase> op)
         this->mCommandBuffer->writeTimestamp(
           vk::PipelineStageFlagBits::eAllCommands,
           *this->timestampQueryPool,
-          this->mOperations.size());
+          static_cast<uint32_t>(this->mOperations.size()));
 
     return shared_from_this();
 }
@@ -381,7 +381,7 @@ Sequence::getTimestamps()
     this->mDevice->getQueryPoolResults(
       *this->timestampQueryPool,
       0,
-      n,
+      static_cast<std::uint32_t>(n),
       timestamps.size() * sizeof(std::uint64_t),
       timestamps.data(),
       sizeof(uint64_t),

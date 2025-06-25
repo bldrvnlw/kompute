@@ -223,18 +223,30 @@ if(KOMPUTE_OPT_BUILD_TESTS OR KOMPUTE_OPT_ENABLE_BENCHMARK)
 endif()
 
 # pybind11
+#set(PYTHON_EXECUTABLE "/Users/bvanlew/miniconda3/bin/python3.12" )
+#set(Python3_EXECUTABLE "/Users/bvanlew/miniconda3/bin/python3.12")
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+message(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
+message(STATUS "Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
+message(STATUS "Python3_LIBRARIES: ${Python3_LIBRARIES}")
+
 if(KOMPUTE_OPT_BUILD_PYTHON)
     if(KOMPUTE_OPT_USE_BUILT_IN_PYBIND11)
-        FetchContent_Declare(pybind GIT_REPOSITORY https://github.com/pybind/pybind11.git
+        FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git
             GIT_TAG v2.9.2
             GIT_SHALLOW 1) # Source: https://github.com/pybind/pybind11/releases
-        FetchContent_MakeAvailable(pybind)
+        FetchContent_MakeAvailable(pybind11)
     else()
         find_package(pybind11 REQUIRED)
     endif()
 
     find_package(PythonLibs REQUIRED)
 endif()
+
+message(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
+message(STATUS "Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
+message(STATUS "Python3_LIBRARIES: ${Python3_LIBRARIES}")
+
 
 # ####################################################
 # Preprocessor Macros

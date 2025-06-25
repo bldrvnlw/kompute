@@ -34,7 +34,7 @@ class OpAlgoDispatch : public OpBase
 
         if (pushConstants.size()) {
             uint32_t memorySize = sizeof(decltype(pushConstants.back()));
-            uint32_t size = pushConstants.size();
+            uint32_t size = static_cast<uint32_t>(pushConstants.size());
             uint32_t totalSize = size * memorySize;
             this->mPushConstantsData = malloc(totalSize);
             memcpy(this->mPushConstantsData, pushConstants.data(), totalSize);

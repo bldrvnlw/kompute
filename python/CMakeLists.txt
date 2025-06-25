@@ -6,4 +6,5 @@ include_directories(
 
 target_link_libraries(
         kp PRIVATE
-        kompute::kompute)
+        kompute::kompute
+        pybind11::headers)
